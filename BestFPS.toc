@@ -1,0 +1,6 @@
+## Interface: 110000
+## Title: BestFPS
+## Version: 1.0.0
+## Notes: The best WoW FPS monitor
+## Author: Morxos
+core.lua
