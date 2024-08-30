@@ -3,4 +3,9 @@
 ## Version: 1.0.0
 ## Notes: The best WoW FPS monitor
 ## Author: Morxos
-core.lua
+## SavedVariables: BestFPS_SavedVars
+internals/settings.lua
+internals/utils.lua
+internals/fps.lua
+internals/ping.lua
+ui/fps.lua
