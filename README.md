@@ -1,3 +1,5 @@
+# BestFPS
+
 Enhance your gaming experience with our advanced FPS addon, designed to deliver crucial performance insights directly within World of Warcraft. Here's what you can expect:
 
 ## Features
