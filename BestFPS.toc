@@ -3,6 +3,7 @@
 ## Version: 1.0.0
 ## Notes: Display frame rate graphs, server latency, and zone-specific FPS data.
 ## Author: Morxos
+## IconTexture: Interface\AddOns\BestFPS\icons\Icon_small.png
 ## SavedVariables: BestFpsSavedVars, BestFpsZoneData
 init.lua
 internals/settings.lua
