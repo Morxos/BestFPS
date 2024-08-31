@@ -1,45 +1,65 @@
-local addonName = "BestFPS"
-local title = C_AddOns.GetAddOnMetadata(addonName, "Title")
-local version = C_AddOns.GetAddOnMetadata(addonName, "Version")
+BestFPS.UI = BestFPS.UI or {}
+
+function BestFPS.UI.GetLatencyColor(latency)
+    -- Return the color based on the latency for the latency text
+    if latency < 32 then
+        return "|cff00ff00" -- Green
+    elseif latency < 64 then
+        return "|cffffff00" -- Orange
+    else
+        return "|cffff0000" -- Red
+    end
+end
+
+function BestFPS.UI.GetFPSColor(fps)
+    -- Return the color based on the FPS for the FPS text
+    if fps < 30 then
+        return "|cffff0000" -- Red
+    elseif fps < 60 then
+        return "|cffffff00" -- Yellow
+    else
+        return "|cff00ff00" -- Green
+    end
+end
 
 
-local function SetupUI()
+function BestFPS.UI.SetupFpsUI()
+    -- Create the main frame for the FPS display
 
-
-
-    local mainFrame = CreateFrame("Frame", "FPSGraphFrame", UIParent, "BackdropTemplate")
-    mainFrame:SetScript("OnUpdate", OnUpdateHandler)
-    mainFrame:SetSize(250, 100)
-    mainFrame:SetResizeBounds(125,50,250,100)
-    mainFrame:SetPoint("CENTER")
-    mainFrame:SetBackdrop({
+    BestFPS.UI.FpsMainWindow = CreateFrame("Frame", "FPSGraphFrame", UIParent, "BackdropTemplate")
+    BestFPS.UI.FpsMainWindow:SetScript("OnUpdate", BestFPS.Fps.OnUpdateHandler)
+    BestFPS.UI.FpsMainWindow:SetSize(250, 100)
+    BestFPS.UI.FpsMainWindow:SetResizeBounds(100,50,250,100)
+    BestFPS.UI.FpsMainWindow:SetPoint("CENTER")
+    BestFPS.UI.FpsMainWindow:SetClampedToScreen(true)
+    BestFPS.UI.FpsMainWindow:SetBackdrop({
         bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = BestFPS_SavedVars.legacy_ui and "Interface/Tooltips/UI-Tooltip-Border" or nil,
+        edgeFile = BestFpsSavedVars.legacy_ui and "Interface/Tooltips/UI-Tooltip-Border" or nil,
         tile = true, tileSize = 16, edgeSize = 16,
         insets = { left = 4, right = 4, top = 4, bottom = 4 }
     })
     -- Update the backdrop when the setting changes
-    Setting_Legacy_UI:SetValueChangedCallback(function (setting, value)
-        mainFrame:SetBackdrop({
+    BestFPS.Settings.LegacyUI:SetValueChangedCallback(function (setting, value)
+        BestFPS.UI.FpsMainWindow:SetBackdrop({
             bgFile = "Interface/Tooltips/UI-Tooltip-Background",
             edgeFile = value and "Interface/Tooltips/UI-Tooltip-Border" or nil,
             tile = true, tileSize = 16, edgeSize = 16,
             insets = { left = 4, right = 4, top = 4, bottom = 4 }
         })
-        mainFrame:SetBackdropColor(0, 0, 0, BestFPS_SavedVars.background_transparency)
+        BestFPS.UI.FpsMainWindow:SetBackdropColor(0, 0, 0, BestFpsSavedVars.background_transparency)
         
         
     end)
 
-    Setting_Background_Transparency:SetValueChangedCallback(function (setting, value)
-        mainFrame:SetBackdropColor(0, 0, 0, value)
+    BestFPS.Settings.BackgroundTransparency:SetValueChangedCallback(function (setting, value)
+        BestFPS.UI.FpsMainWindow:SetBackdropColor(0, 0, 0, value)
     end)
 
-    mainFrame:SetBackdropColor(0, 0, 0, BestFPS_SavedVars.background_transparency)
-    mainFrame:EnableMouse(true)
-    mainFrame:SetMovable(true)
-    mainFrame:SetResizable(true)
-    mainFrame:RegisterForDrag("LeftButton")  -- Step 3: Register the left mouse button for drag
+    BestFPS.UI.FpsMainWindow:SetBackdropColor(0, 0, 0, BestFpsSavedVars.background_transparency)
+    BestFPS.UI.FpsMainWindow:EnableMouse(true)
+    BestFPS.UI.FpsMainWindow:SetMovable(true)
+    BestFPS.UI.FpsMainWindow:SetResizable(true)
+    BestFPS.UI.FpsMainWindow:RegisterForDrag("LeftButton")  -- Step 3: Register the left mouse button for drag
 
 
 
@@ -48,7 +68,7 @@ local function SetupUI()
     local function OnEnter(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         -- Add title
-        GameTooltip:SetText(title.." "..version)
+        GameTooltip:SetText(BestFPS.Title.." "..BestFPS.Version)
         GameTooltip:AddLine("Hold |cffffffffShift|r to move", nil, nil, nil, true)  -- true for wrap text
         GameTooltip:AddLine("Hold |cffffffffCtrl|r to resize", nil, nil, nil, true)  -- true for wrap text
         GameTooltip:AddLine("|cffffffffRight click|r to show zones", nil, nil, nil, true)  -- true for wrap text
@@ -61,10 +81,10 @@ local function SetupUI()
     end
 
     -- Attach the mouse over and leave scripts to the frame
-    mainFrame:SetScript("OnEnter", OnEnter)
-    mainFrame:SetScript("OnLeave", OnLeave)
+    BestFPS.UI.FpsMainWindow:SetScript("OnEnter", OnEnter)
+    BestFPS.UI.FpsMainWindow:SetScript("OnLeave", OnLeave)
 
-    local fpsFrame = CreateFrame("Frame", nil, mainFrame)
+    local fpsFrame = CreateFrame("Frame", nil, BestFPS.UI.FpsMainWindow)
     fpsFrame:SetSize(125, 50)
 
 
@@ -84,14 +104,14 @@ local function SetupUI()
 
     
 
-    local home_latency = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal") 
+    local home_latency = BestFPS.UI.FpsMainWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal") 
     home_latency:SetPoint("TOPRIGHT",  -10, -10)
 
     --local lowFPS1 = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     --lowFPS1:SetPoint("TOPRIGHT",  -5, -20)
     --lowFPS1:SetText("1% Low: 0")
 
-    local world_latency = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local world_latency = BestFPS.UI.FpsMainWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     world_latency:SetPoint("TOPRIGHT", -10, -25)
 
 
@@ -99,18 +119,15 @@ local function SetupUI()
     local graphWidth = 280
     local graphHeight = 40
 
-    
-
-
-    local graphFrame = CreateFrame("Frame", nil, mainFrame)
+    local graphFrame = CreateFrame("Frame", nil, BestFPS.UI.FpsMainWindow)
     graphFrame:SetSize(graphWidth, graphHeight)
-    graphFrame:SetPoint("BOTTOM", mainFrame, "BOTTOM", 0, 10)
+    graphFrame:SetPoint("BOTTOM", BestFPS.UI.FpsMainWindow, "BOTTOM", 0, 10)
 
 
     -- Constants for FPS marks
     local FPS_MARK_30 = 30
     local FPS_MARK_60 = 60
-    local maxFPS = 100  -- Adjust based on expected max FPS
+    local maxFPS = 100  -- Is adjusted dynamically
 
     -- Create horizontal line for 30 FPS
     local line30FPS = graphFrame:CreateTexture(nil, "OVERLAY")
@@ -135,14 +152,13 @@ local function SetupUI()
     text60FPS:SetPoint("BOTTOMLEFT", 0, graphHeight * (FPS_MARK_60 / maxFPS) + 2)
     text60FPS:SetTextColor(1, 1, 0, 1)
 
-    local numBars = 25
-    local barWidth = graphWidth / numBars
+    local numTraceBars = 25
+    local barWidth = graphWidth / numTraceBars
     local bars = {}
-    local bar_values = {}
-    local update_index = 0
+    local traceBarValues = {}
 
-    for i = 1, numBars do
-        bar_values[i] = 0
+    for i = 1, numTraceBars do
+        traceBarValues[i] = 0
         local bar = graphFrame:CreateTexture(nil, "BACKGROUND")
         bar:SetSize(barWidth-2, 0)
         bar:SetColorTexture(0, 1, 0, 0.8)
@@ -154,52 +170,53 @@ local function SetupUI()
 
     
 
-    local function UpdateFpsUI()
-        local home_latency_value = GetHomeLatency()
-            local world_latency_value = GetWorldLatency()
-            local fps = GetAvgFrameRate()
-            local low_fps_99 = GetOnePercentLowFrameRate()
-            lowFPS99:SetText("99% FPS: " ..BestFPS_GetFPSColor(low_fps_99).. string.format("%.0f",low_fps_99).."|r")
-            fpsText:SetText("" ..BestFPS_GetFPSColor(fps).. string.format("%.0f",fps).."|r FPS")
+    local function updateFpsUI()
+        -- Update the FPS and latency text
+        local home_latency_value = BestFPS.Ping.GetHomeLatency()
+            local world_latency_value = BestFPS.Ping.GetWorldLatency()
+            local fps = BestFPS.Fps.GetAvgFrameRate()
+            local low_fps_99 = BestFPS.Fps.GetOnePercentLowFrameRate()
+            lowFPS99:SetText("99% FPS: " ..BestFPS.UI.GetFPSColor(low_fps_99).. string.format("%.0f",low_fps_99).."|r")
+            fpsText:SetText("" ..BestFPS.UI.GetFPSColor(fps).. string.format("%.0f",fps).."|r FPS")
             fpsFrame:SetSize(fpsText:GetStringWidth(), 50)
 
             --Set background color of the fps frame
-            if graphWidth > 190 then
-                home_latency:SetText("Home: " ..BestFPS_GetLatencyColor(home_latency_value) .. tostring(home_latency_value).. "|r ms")
-                world_latency:SetText("World: "..BestFPS_GetLatencyColor(world_latency_value) .. tostring(world_latency_value).. "|r ms")
+            if graphWidth > 160 then
+                home_latency:SetText("Home: " ..BestFPS.UI.GetLatencyColor(home_latency_value) .. tostring(home_latency_value).. "|r ms")
+                world_latency:SetText("World: "..BestFPS.UI.GetLatencyColor(world_latency_value) .. tostring(world_latency_value).. "|r ms")
             else
-                home_latency:SetText("H: " ..BestFPS_GetLatencyColor(home_latency_value) .. tostring(home_latency_value).. "|r ms")
-                world_latency:SetText("W: "..BestFPS_GetLatencyColor(world_latency_value) .. tostring(world_latency_value).. "|r ms")
+                home_latency:SetText("H: " ..BestFPS.UI.GetLatencyColor(home_latency_value) .. tostring(home_latency_value).. "|r ms")
+                world_latency:SetText("W: "..BestFPS.UI.GetLatencyColor(world_latency_value) .. tostring(world_latency_value).. "|r ms")
             end
     end
 
 
     local function updateGraph()
+        -- Update the graph with the current FPS value
         
-        
-        for i = 1, numBars - 1 do
-            bar_values[i] = bar_values[i + 1]
+        for i = 1, numTraceBars - 1 do
+            traceBarValues[i] = traceBarValues[i + 1]
         end
 
 
-        bar_values[#bar_values] = GetCurrentFrameRate()
+        traceBarValues[#traceBarValues] = BestFPS.Fps.GetCurrentFrameRate()
         
         -- Find max fps from recorded values
         local max = 0
-        for i = 1, #bar_values do
-            if bar_values[i] > max then
-                max = bar_values[i]
+        for i = 1, #traceBarValues do
+            if traceBarValues[i] > max then
+                max = traceBarValues[i]
             end
         end
         maxFPS = math.max(30,max)
 
         -- Update the bars
-        for i = 1, numBars do
-            bars[i]:SetHeight(graphHeight * (bar_values[i] / maxFPS))
+        for i = 1, numTraceBars do
+            bars[i]:SetHeight(graphHeight * (traceBarValues[i] / maxFPS))
             -- Change color of bars if they are below 30 or 60 FPS
-            if bar_values[i] < FPS_MARK_30 then
+            if traceBarValues[i] < FPS_MARK_30 then
                 bars[i]:SetColorTexture(1, 0, 0, 0.8)
-            elseif bar_values[i] < FPS_MARK_60 then
+            elseif traceBarValues[i] < FPS_MARK_60 then
                 bars[i]:SetColorTexture(1, 1, 0, 0.8)
             else
                 bars[i]:SetColorTexture(0, 1, 0, 0.8)
@@ -233,16 +250,17 @@ local function SetupUI()
             line60FPS:Show()
             --Show the text
             text60FPS:Show()
+            --Hide the text if 60 fps text is shown
+            text30FPS:Hide()
         end
-
-        update_index = update_index + 1
 
     end
 
     local function OnSizeChanged(self)
+        -- Update the UI elements when the frame is resized
         graphWidth = self:GetWidth() - 20
         graphHeight = self:GetHeight() - 70
-        local show_meta = graphWidth > 160
+        local show_meta = graphWidth > 135
         local show_trace = graphHeight > 5
 
         if show_meta then
@@ -260,7 +278,7 @@ local function SetupUI()
         end
         fpsFrame:ClearAllPoints()
         if not show_meta and not show_trace then
-            fpsFrame:SetPoint("CENTER", mainFrame, "CENTER")
+            fpsFrame:SetPoint("CENTER", BestFPS.UI.FpsMainWindow, "CENTER")
             
         elseif not show_meta then
             fpsFrame:SetPoint("TOP", 0,0)
@@ -286,59 +304,48 @@ local function SetupUI()
         line60FPS:SetSize(graphWidth-2, 2)
         line60FPS:SetPoint("BOTTOMLEFT", 0, graphHeight * (FPS_MARK_60 / maxFPS))
         
-        barWidth = graphWidth / numBars
-        for i = 1, numBars do
+        barWidth = graphWidth / numTraceBars
+        for i = 1, numTraceBars do
             bars[i]:SetSize(barWidth-2, 0)
             bars[i]:SetPoint("BOTTOMLEFT", (i - 1) * barWidth, 0)
         end
     end
 
     local function OnMouseDown(self, button)
-        if IsShiftKeyDown() and button == "LeftButton" then -- Check if Shift is held and the left button is used
+        -- Actions for resizing, moving and showing the zone window
+        if IsShiftKeyDown() and button == "LeftButton" then
             self:StartMoving()
         end
         if IsControlKeyDown() and button == "LeftButton" then
-            mainFrame:StartSizing("BOTTOMRIGHT")
-            print("resizing")
+            BestFPS.UI.FpsMainWindow:StartSizing("BOTTOMRIGHT")
         end
         if button == "RightButton" then
-            BestFPS_ZonesMainWindow:Show()
+            BestFPS.UI.ZonesMainWindow:Show()
         end
     end
 
     local function OnMouseUp(self, button)
+        -- Stop resizing and moving when the mouse button is released
         self:StopMovingOrSizing()
     end
 
-    mainFrame:SetScript("OnMouseDown", OnMouseDown)
-    mainFrame:SetScript("OnMouseUp", OnMouseUp)
-    mainFrame:SetScript("OnSizeChanged", OnSizeChanged)
+    BestFPS.UI.FpsMainWindow:SetScript("OnMouseDown", OnMouseDown)
+    BestFPS.UI.FpsMainWindow:SetScript("OnMouseUp", OnMouseUp)
+    BestFPS.UI.FpsMainWindow:SetScript("OnSizeChanged", OnSizeChanged)
 
     -- Update graph on width change
-    local update_graph_ticker = C_Timer.NewTicker(1/BestFPS_SavedVars.fps_graph_update_rate, updateGraph)
-    local update_fps_ticker = C_Timer.NewTicker(1/BestFPS_SavedVars.fps_update_rate, UpdateFpsUI)
+    local updateGraphTicker = C_Timer.NewTicker(1/BestFpsSavedVars.fps_graph_update_rate, updateGraph)
+    local updateFpsTicker = C_Timer.NewTicker(1/BestFpsSavedVars.fps_update_rate, updateFpsUI)
 
-    Setting_FPS_Update_Rate:SetValueChangedCallback(function (setting, value)
-        update_fps_ticker:Cancel()
-        update_fps_ticker = C_Timer.NewTicker(1/value, UpdateFpsUI)
+    BestFPS.Settings.FpsUpdateRate:SetValueChangedCallback(function (setting, value)
+        updateFpsTicker:Cancel()
+        updateFpsTicker = C_Timer.NewTicker(1/value, updateFpsUI)
     end)
 
-    Setting_FPS_Graph_Update_Rate:SetValueChangedCallback(function (setting, value)
-        update_graph_ticker:Cancel()
-        update_graph_ticker = C_Timer.NewTicker(1/value, updateGraph)
+    BestFPS.Settings.FpsGraphUpdateRate:SetValueChangedCallback(function (setting, value)
+        updateGraphTicker:Cancel()
+        updateGraphTicker = C_Timer.NewTicker(1/value, updateGraph)
     end)
 
     
 end
-
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
-eventFrame:SetScript("OnEvent", function(self, event, arg1)
-    if arg1 == "BestFPS" then
-        InitilizeSettingsUI()
-        SetupUI()
-        BestFPS_InitZoneUpdate()
-        BestFPS_SetupZoneUI()
-        eventFrame:UnregisterEvent("ADDON_LOADED")
-    end
-end)

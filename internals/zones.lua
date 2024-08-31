@@ -1,37 +1,39 @@
-BestFPS_ZoneData = BestFPS_ZoneData or {}
+BestFpsZoneData = BestFpsZoneData or {}
+BestFPS.Zones = BestFPS.Zones or {}
 
-function BestFPS_AddZoneData(zone, avg_fps_entry, one_percent_low_fps_entry)
-    if zone == nil then
+function BestFPS.Zones.AddZoneData(zoneId, avgFpsEntry, onePercentLowFpsEntry)
+    -- Add the zone with the avg_fps and one_percent_low_fps to the table
+    if zoneId == nil then
         return
     end
---Check if the zone exists in the table
-    if BestFPS_ZoneData[zone] == nil then
+    --Check if the zone exists in the table
+    if BestFpsZoneData[zoneId] == nil then
         -- Add zone data with two empty arrays for the avg_fps and one_percent_low_fps
-        BestFPS_ZoneData[zone] = {avg_fps_sum = 0, one_percent_low_fps = 0, entry_count = 0}
+        BestFpsZoneData[zoneId] = {avgFpsSum = 0, onePercentLowFpsSum = 0, entryCount = 0}
     end
     -- Add the new data to the zone
-    BestFPS_ZoneData[zone].avg_fps_sum = BestFPS_ZoneData[zone].avg_fps_sum + avg_fps_entry
-    BestFPS_ZoneData[zone].one_percent_low_fps = BestFPS_ZoneData[zone].one_percent_low_fps + one_percent_low_fps_entry
-    BestFPS_ZoneData[zone].entry_count = BestFPS_ZoneData[zone].entry_count + 1
+    BestFpsZoneData[zoneId].avgFpsSum = BestFpsZoneData[zoneId].avgFpsSum + avgFpsEntry
+    BestFpsZoneData[zoneId].onePercentLowFpsSum = BestFpsZoneData[zoneId].onePercentLowFpsSum + onePercentLowFpsEntry
+    BestFpsZoneData[zoneId].entryCount = BestFpsZoneData[zoneId].entryCount + 1
 end
 
-function BestFPS_ClearZoneData()
-    BestFPS_ZoneData = {}
+function BestFPS.Zones.ClearZoneData()
+    -- Clear the zone data
+    BestFpsZoneData = {}
 end
 
-function BestFPS_GetZoneData()
-    return BestFPS_ZoneData
+function BestFPS.Zones.GetZoneData()
+    -- Return the raw zone data
+    return BestFpsZoneData
 end
 
-function BestFPS_InitZoneUpdate()
-
+function BestFPS.Zones.InitZoneUpdater()
+    -- Starts the zone updater
     C_Timer.NewTicker(1, function()
-        local avg_fps = GetAvgFrameRate()
-        local one_percent_low_fps = GetOnePercentLowFrameRate()
+        local avgFps = BestFPS.Fps.GetAvgFrameRate()
+        local onePercentLowFps = BestFPS.Fps.GetOnePercentLowFrameRate()
         local mapID = C_Map.GetBestMapForUnit("player")
-        -- Only update the data if the game has focus
-        BestFPS_AddZoneData(mapID, avg_fps, one_percent_low_fps)
-        -- print("Zone: " .. mapID .. " Avg FPS: " .. avg_fps .. " 1% Low: " .. one_percent_low_fps)
+        BestFPS.Zones.AddZoneData(mapID, avgFps, onePercentLowFps)
         
     end)
 end
