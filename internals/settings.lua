@@ -55,7 +55,25 @@ function InitilizeSettingsUI()
     options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
     Settings.CreateSlider(category, Setting_FPS_Graph_Update_Rate,options ,"Sets how often the FPS graph is updated per second. This does not affect the FPS value update rate.")
 
+    -- FPS Data retention time
+    local name = "FPS Data Retention Time"
+    local variable = "BestFPS_fps_data_retention_time"
+    local variableKey = "fps_data_retention_time"
+    local variableTbl = BestFPS_SavedVars
+    local defaultValue = 2
+    local minValue = 1
+    local maxValue = 10
+    local step = 0.1
+    Setting_FPS_Data_Retention_Time = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+    local options = Settings.CreateSliderOptions(minValue, maxValue, step)
+    options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+    Settings.CreateSlider(category, Setting_FPS_Data_Retention_Time,options ,"Sets how long the FPS data is retained in seconds for metrics calculations.")
 
+    Setting_FPS_Data_Retention_Time:SetValueChangedCallback(function(setting, value)
+        BestFPS_SetRetentionTime(value)
+    end)
+
+    BestFPS_SetRetentionTime(BestFPS_SavedVars.fps_data_retention_time)
 
     Settings.RegisterAddOnCategory(category)
 end

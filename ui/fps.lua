@@ -8,8 +8,9 @@ local function SetupUI()
 
 
     local mainFrame = CreateFrame("Frame", "FPSGraphFrame", UIParent, "BackdropTemplate")
-    mainFrame:SetSize(300, 100)
-    mainFrame:SetResizeBounds(125,50,300,100)
+    mainFrame:SetScript("OnUpdate", OnUpdateHandler)
+    mainFrame:SetSize(250, 100)
+    mainFrame:SetResizeBounds(125,50,250,100)
     mainFrame:SetPoint("CENTER")
     mainFrame:SetBackdrop({
         bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -50,6 +51,7 @@ local function SetupUI()
         GameTooltip:SetText(title.." "..version)
         GameTooltip:AddLine("Hold |cffffffffShift|r to move", nil, nil, nil, true)  -- true for wrap text
         GameTooltip:AddLine("Hold |cffffffffCtrl|r to resize", nil, nil, nil, true)  -- true for wrap text
+        GameTooltip:AddLine("|cffffffffRight click|r to show zones", nil, nil, nil, true)  -- true for wrap text
         GameTooltip:Show()
     end
 
@@ -62,15 +64,25 @@ local function SetupUI()
     mainFrame:SetScript("OnEnter", OnEnter)
     mainFrame:SetScript("OnLeave", OnLeave)
 
-
+    local fpsFrame = CreateFrame("Frame", nil, mainFrame)
+    fpsFrame:SetSize(125, 50)
 
 
     -- Add FPS text to top of frame
-    local fpsText = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fpsText:SetPoint("TOPLEFT", 10, -10)
+    local fpsText = fpsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fpsText:SetPoint("TOPLEFT", 0, -10)
     fpsText:SetText("0")
-    fpsText:SetFont("Fonts\\FRIZQT__.TTF", 25, "OUTLINE")
+    fpsText:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
     -- Add average and 1% and 10% low FPS text to top of frame
+
+
+    -- Small text in the top middle for the 99th percentile
+    local lowFPS99 = fpsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    lowFPS99:SetPoint("TOPLEFT", 5, -30)
+    lowFPS99:SetText("99%: 0")
+    lowFPS99:SetFont(GameFontNormal:GetFont(), 10)
+
+    
 
     local home_latency = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal") 
     home_latency:SetPoint("TOPRIGHT",  -10, -10)
@@ -87,6 +99,7 @@ local function SetupUI()
     local graphWidth = 280
     local graphHeight = 40
 
+    
 
 
     local graphFrame = CreateFrame("Frame", nil, mainFrame)
@@ -139,37 +152,24 @@ local function SetupUI()
         bars[i] = bar
     end
 
-    local function GetLatencyColor(latency)
-        if latency < 32 then
-            return "|cff00ff00" -- Green
-        elseif latency < 64 then
-            return "|cffffff00" -- Orange
-        else
-            return "|cffff0000" -- Red
-        end
-    end
-
-    local function GetFPSColor(fps)
-        if fps < 30 then
-            return "|cffff0000" -- Red
-        elseif fps < 60 then
-            return "|cffffff00" -- Yellow
-        else
-            return "|cff00ff00" -- Green
-        end
-    end
+    
 
     local function UpdateFpsUI()
         local home_latency_value = GetHomeLatency()
             local world_latency_value = GetWorldLatency()
-            local fps = GetCurrentFrameRate()
-            fpsText:SetText("" ..GetFPSColor(fps).. string.format("%.0f",fps).."|r FPS")
+            local fps = GetAvgFrameRate()
+            local low_fps_99 = GetOnePercentLowFrameRate()
+            lowFPS99:SetText("99% FPS: " ..BestFPS_GetFPSColor(low_fps_99).. string.format("%.0f",low_fps_99).."|r")
+            fpsText:SetText("" ..BestFPS_GetFPSColor(fps).. string.format("%.0f",fps).."|r FPS")
+            fpsFrame:SetSize(fpsText:GetStringWidth(), 50)
+
+            --Set background color of the fps frame
             if graphWidth > 190 then
-                home_latency:SetText("Home: " ..GetLatencyColor(home_latency_value) .. tostring(home_latency_value).. "|r ms")
-                world_latency:SetText("World: "..GetLatencyColor(world_latency_value) .. tostring(world_latency_value).. "|r ms")
+                home_latency:SetText("Home: " ..BestFPS_GetLatencyColor(home_latency_value) .. tostring(home_latency_value).. "|r ms")
+                world_latency:SetText("World: "..BestFPS_GetLatencyColor(world_latency_value) .. tostring(world_latency_value).. "|r ms")
             else
-                home_latency:SetText("H: " ..GetLatencyColor(home_latency_value) .. tostring(home_latency_value).. "|r ms")
-                world_latency:SetText("W: "..GetLatencyColor(world_latency_value) .. tostring(world_latency_value).. "|r ms")
+                home_latency:SetText("H: " ..BestFPS_GetLatencyColor(home_latency_value) .. tostring(home_latency_value).. "|r ms")
+                world_latency:SetText("W: "..BestFPS_GetLatencyColor(world_latency_value) .. tostring(world_latency_value).. "|r ms")
             end
     end
 
@@ -241,7 +241,7 @@ local function SetupUI()
 
     local function OnSizeChanged(self)
         graphWidth = self:GetWidth() - 20
-        graphHeight = self:GetHeight() - 60
+        graphHeight = self:GetHeight() - 70
         local show_meta = graphWidth > 160
         local show_trace = graphHeight > 5
 
@@ -258,16 +258,16 @@ local function SetupUI()
         else
             graphFrame:Hide()
         end
-        fpsText:ClearAllPoints()
+        fpsFrame:ClearAllPoints()
         if not show_meta and not show_trace then
-            print("Centering FPS text")
-            fpsText:SetPoint("CENTER", mainFrame, "CENTER")
+            fpsFrame:SetPoint("CENTER", mainFrame, "CENTER")
+            
         elseif not show_meta then
-            fpsText:SetPoint("TOP", 0, -10)
+            fpsFrame:SetPoint("TOP", 0,0)
         elseif not show_trace then
-            fpsText:SetPoint("LEFT", 10, 0)
+            fpsFrame:SetPoint("LEFT", 10,0)
         else
-            fpsText:SetPoint("TOPLEFT", 10, -10)
+            fpsFrame:SetPoint("TOPLEFT", 10,0)
         end
 
         home_latency:ClearAllPoints()
@@ -300,6 +300,9 @@ local function SetupUI()
         if IsControlKeyDown() and button == "LeftButton" then
             mainFrame:StartSizing("BOTTOMRIGHT")
             print("resizing")
+        end
+        if button == "RightButton" then
+            BestFPS_ZonesMainWindow:Show()
         end
     end
 
@@ -334,6 +337,8 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if arg1 == "BestFPS" then
         InitilizeSettingsUI()
         SetupUI()
+        BestFPS_InitZoneUpdate()
+        BestFPS_SetupZoneUI()
         eventFrame:UnregisterEvent("ADDON_LOADED")
     end
 end)

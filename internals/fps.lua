@@ -1,5 +1,6 @@
-local max_samples = 100
+local retention_time = 2
 local fpsData = {}
+local fpsDataTime = {}
 
 function GetAvgFrameRate()
     local sum = 0
@@ -9,8 +10,11 @@ function GetAvgFrameRate()
     for i = 1, #fpsData do
         sum = sum + fpsData[i]
     end
-    
-    return sum / #fpsData
+    local avg = sum / #fpsData
+    if avg == math.huge or avg == -math.huge then
+        return 0
+    end
+    return avg
 end
 
 function GetCurrentFrameRate()
@@ -20,22 +24,34 @@ function GetCurrentFrameRate()
     return fpsData[#fpsData]
 end
 
+function BestFPS_SetRetentionTime(time)
+    retention_time = time
+end
+
+function BestFPS_GetRetentionTime()
+    return retention_time
+end
+
+function OnUpdateHandler(self, elapsed)
+    local framerate = 1 / elapsed
+    table.insert(fpsData, framerate)
+    table.insert(fpsDataTime, GetTime())
+    while fpsDataTime[1] and GetTime() - fpsDataTime[1] > BestFPS_GetRetentionTime() do
+        table.remove(fpsData, 1)
+        table.remove(fpsDataTime, 1)
+    end
+end
+
+
 function GetOnePercentLowFrameRate()
     if #fpsData == 0 then
         return 0
     end
     local local_fps_data = ShallowCopyTable(fpsData)
     table.sort(local_fps_data)
-    return local_fps_data[math.max(1,math.floor(#local_fps_data * 0.01))]
-end
-
-
-local function fast_update()
-    table.insert(fpsData, GetFramerate())
-    if #fpsData > max_samples then
-        table.remove(fpsData, 1)
+    local one_percent = local_fps_data[math.max(1,math.floor(#local_fps_data * 0.01))]
+    if one_percent == math.huge or one_percent == -math.huge then
+        return 0
     end
-    
+    return one_percent
 end
-
-C_Timer.NewTicker(0.02, fast_update)
