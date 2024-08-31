@@ -309,6 +309,9 @@ function BestFPS.UI.SetupFpsUI()
             bars[i]:SetSize(barWidth-2, 0)
             bars[i]:SetPoint("BOTTOMLEFT", (i - 1) * barWidth, 0)
         end
+
+        -- Update the text
+        updateFpsUI()
     end
 
     local function OnMouseDown(self, button)
