@@ -1,6 +1,6 @@
-## Interface: 110007
+## Interface: 110205
 ## Title: BestFPS
-## Version: 1.0.1
+## Version: 1.0.2
 ## Notes: Display frame rate graphs, server latency, and zone-specific FPS data.
 ## Author: Morxos
 ## IconTexture: Interface\AddOns\BestFPS\icons\Icon_small.png
