@@ -1,4 +1,4 @@
-## Interface: 110205
+## Interface: 120000
 ## Title: BestFPS
 ## Version: 1.0.2
 ## Notes: Display frame rate graphs, server latency, and zone-specific FPS data.
